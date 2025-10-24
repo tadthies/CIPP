@@ -1,9 +1,9 @@
 import { Layout as DashboardLayout } from "/src/layouts/index.js";
 import { CippTablePage } from "/src/components/CippComponents/CippTablePage.jsx";
-import { Book, LaptopChromebook, RocketLaunch } from "@mui/icons-material";
-import { GlobeAltIcon, TrashIcon, UserIcon } from "@heroicons/react/24/outline";
+import { Book, LaptopChromebook } from "@mui/icons-material";
+import { GlobeAltIcon, TrashIcon, UserIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 import { PermissionButton } from "/src/utils/permissions.js";
-import Link from "next/link";
+import { CippPolicyDeployDrawer } from "/src/components/CippComponents/CippPolicyDeployDrawer.jsx";
 
 const Page = () => {
   const pageTitle = "Configuration Policies";
@@ -62,6 +62,26 @@ const Page = () => {
       color: "info",
     },
     {
+      label: "Assign to Custom Group",
+      type: "POST",
+      url: "/api/ExecAssignPolicy",
+      data: {
+        ID: "id",
+        type: "URLName",
+      },
+      confirmText: "Enter the name of the group to assign this policy to. Wildcards (*) are allowed.",
+      icon: <UserGroupIcon />,
+      color: "info",
+      fields: [
+        {
+          type: "textField",
+          name: "AssignTo",
+          label: "Group Name(s), optionally comma-separated",
+          placeholder: "IT-*, Sales Team",
+        },
+      ],
+    },
+    {
       label: "Delete Policy",
       type: "POST",
       url: "/api/RemovePolicy",
@@ -102,14 +122,11 @@ const Page = () => {
       offCanvas={offCanvas}
       simpleColumns={simpleColumns}
       cardButton={
-        <PermissionButton
+        <CippPolicyDeployDrawer
+          buttonText="Deploy Policy"
           requiredPermissions={cardButtonPermissions}
-          component={Link}
-          href="/endpoint/MEM/add-policy"
-          startIcon={<RocketLaunch />}
-        >
-          Deploy Policy
-        </PermissionButton>
+          PermissionButton={PermissionButton}
+        />
       }
     />
   );

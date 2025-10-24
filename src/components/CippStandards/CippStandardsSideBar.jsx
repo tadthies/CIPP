@@ -155,7 +155,8 @@ const CippStandardsSideBar = ({
       });
 
       const existingTemplates = driftValidationApi.data.filter((template) => {
-        const shouldInclude = edit && watchForm.GUID ? template.standardId !== watchForm.GUID : true;
+        const shouldInclude =
+          edit && watchForm.GUID ? template.standardId !== watchForm.GUID : true;
         console.log(
           `Template ${template.standardId} (${template.standardName}): shouldInclude=${shouldInclude}, currentGUID=${watchForm.GUID}`
         );
@@ -164,7 +165,11 @@ const CippStandardsSideBar = ({
 
       console.log(
         "Filtered templates:",
-        existingTemplates?.map((t) => ({ GUID: t.GUID, standardId: t.standardId, standardName: t.standardName }))
+        existingTemplates?.map((t) => ({
+          GUID: t.GUID,
+          standardId: t.standardId,
+          standardName: t.standardName,
+        }))
       );
 
       // Get tenant groups data
@@ -413,9 +418,9 @@ const CippStandardsSideBar = ({
           {/* Show drift error */}
           {isDriftMode && driftError && <Alert severity="error">{driftError}</Alert>}
 
-          {watchForm.tenantFilter?.some(
+          {(watchForm.tenantFilter?.some(
             (tenant) => tenant.value === "AllTenants" || tenant.type === "Group"
-          ) && (
+          ) || (watchForm.excludedTenants && watchForm.excludedTenants.length > 0)) && (
             <>
               <Divider />
               <CippFormTenantSelector
@@ -534,7 +539,7 @@ const CippStandardsSideBar = ({
         title="Add Standard"
         api={{
           confirmText: isDriftMode
-            ? "This template will automatically run every 3 hours to detect drift. Are you sure you want to apply this Drift Template?"
+            ? "This template will automatically every hour to detect drift. Are you sure you want to apply this Drift Template?"
             : watchForm.runManually
             ? "Are you sure you want to apply this standard? This template has been set to never run on a schedule. After saving the template you will have to run it manually."
             : "Are you sure you want to apply this standard? This will apply the template and run every 3 hours.",

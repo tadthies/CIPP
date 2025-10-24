@@ -286,9 +286,11 @@ function CippJsonView({
                 let value;
                 if (child.choiceSettingValue && child.choiceSettingValue.value) {
                   value =
-                    childIntuneObj?.options?.find(
-                      (option) => option.id === child.choiceSettingValue.value
-                    )?.displayName || child.choiceSettingValue.value;
+                    (Array.isArray(childIntuneObj?.options) &&
+                      childIntuneObj.options.find(
+                        (option) => option.id === child.choiceSettingValue.value
+                      )?.displayName) ||
+                    child.choiceSettingValue.value;
                 }
                 items.push(
                   <PropertyListItem
@@ -328,7 +330,9 @@ function CippJsonView({
           const label = intuneObj?.displayName || settingInstance.settingDefinitionId;
           const rawValue = settingInstance.choiceSettingValue.value;
           let optionValue =
-            intuneObj?.options?.find((option) => option.id === rawValue)?.displayName || rawValue;
+            (Array.isArray(intuneObj?.options) &&
+              intuneObj.options.find((option) => option.id === rawValue)?.displayName) ||
+            rawValue;
 
           // Check if optionValue is a GUID that we've resolved
           if (typeof optionValue === "string" && isGuid(optionValue) && guidMapping[optionValue]) {
@@ -433,7 +437,7 @@ function CippJsonView({
       "createdDateTime",
       "modifiedDateTime",
     ];
-    const cleanedObj = cleanObject(object);
+    const cleanedObj = cleanObject(object) || {};
     const filteredObj = Object.fromEntries(
       Object.entries(cleanedObj).filter(([key]) => !blacklist.includes(key))
     );
