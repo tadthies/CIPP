@@ -80,6 +80,9 @@ const initialSettings = {
   },
   persistFilters: false,
   lastUsedFilters: {},
+  breadcrumbMode: "hierarchical",
+  bookmarkSidebar: true,
+  bookmarkPopover: false,
 };
 
 const initialState = {
@@ -112,6 +115,12 @@ export const SettingsProvider = (props) => {
         ...restored,
         isInitialized: true,
       }));
+    } else {
+      // No stored settings found, initialize with defaults
+      setState((prevState) => ({
+        ...prevState,
+        isInitialized: true,
+      }));
     }
   }, []);
 
@@ -125,14 +134,22 @@ export const SettingsProvider = (props) => {
 
   const handleUpdate = useCallback((settings) => {
     setState((prevState) => {
+      // Filter out null and undefined values to prevent resetting settings
+      const filteredSettings = Object.entries(settings).reduce((acc, [key, value]) => {
+        if (value !== null && value !== undefined) {
+          acc[key] = value;
+        }
+        return acc;
+      }, {});
+
       storeSettings({
         ...prevState,
-        ...settings,
+        ...filteredSettings,
       });
 
       return {
         ...prevState,
-        ...settings,
+        ...filteredSettings,
       };
     });
   }, []);

@@ -31,7 +31,6 @@ export const nativeMenuItems = [
     items: [
       {
         title: "Administration",
-        path: "/identity/administration",
         permissions: ["Identity.User.*"],
         items: [
           {
@@ -75,6 +74,16 @@ export const nativeMenuItems = [
             permissions: ["Identity.Role.*"],
           },
           {
+            title: "JIT Admin Templates",
+            path: "/identity/administration/jit-admin-templates",
+            permissions: ["Identity.Role.*"],
+          },
+          {
+            title: "Vacation Mode",
+            path: "/identity/administration/vacation-mode",
+            permissions: ["Identity.User.*"],
+          },
+          {
             title: "Offboarding Wizard",
             path: "/identity/administration/offboarding-wizard",
             permissions: ["Identity.User.*"],
@@ -83,7 +92,6 @@ export const nativeMenuItems = [
       },
       {
         title: "Reports",
-        path: "/identity/reports",
         permissions: [
           "Identity.User.*",
           "Identity.Group.*",
@@ -133,7 +141,6 @@ export const nativeMenuItems = [
     items: [
       {
         title: "Administration",
-        path: "/tenant/administration",
         permissions: ["Tenant.Administration.*"],
         items: [
           {
@@ -176,16 +183,20 @@ export const nativeMenuItems = [
             path: "/tenant/administration/partner-relationships",
             permissions: ["Tenant.Relationship.*"],
           },
+          {
+            title: "Domains",
+            path: "/tenant/administration/domains",
+            permissions: ["Tenant.Administration.*"],
+          },
         ],
       },
       {
         title: "GDAP Management",
-        path: "/tenant/gdap-management/",
+        path: "/tenant/gdap-management",
         permissions: ["Tenant.Relationship.*"],
       },
       {
         title: "Standards & Drift",
-        path: "/tenant/standards",
         permissions: [
           "Tenant.Standards.*",
           "Tenant.BestPracticeAnalyser.*",
@@ -194,7 +205,7 @@ export const nativeMenuItems = [
         items: [
           {
             title: "Standards Management",
-            path: "/tenant/standards/list-standards",
+            path: "/tenant/standards/alignment",
             permissions: ["Tenant.Standards.*"],
           },
           {
@@ -211,7 +222,6 @@ export const nativeMenuItems = [
       },
       {
         title: "Conditional Access",
-        path: "/tenant/conditional",
         permissions: ["Tenant.ConditionalAccess.*"],
         items: [
           {
@@ -238,7 +248,6 @@ export const nativeMenuItems = [
       },
       {
         title: "Reports",
-        path: "/tenant/reports",
         permissions: ["Tenant.Administration.*", "Scheduler.Billing.*", "Tenant.Application.*"],
         items: [
           {
@@ -257,6 +266,11 @@ export const nativeMenuItems = [
             permissions: ["Tenant.Application.*"],
           },
         ],
+      },
+      {
+        title: "Manage Tenant",
+        path: "/tenant/manage/edit",
+        permissions: ["Tenant.Administration.*"],
       },
     ],
   },
@@ -277,7 +291,6 @@ export const nativeMenuItems = [
     items: [
       {
         title: "Incidents & Alerts",
-        path: "/security/incidents",
         permissions: ["Security.Incident.*"],
         items: [
           {
@@ -304,7 +317,6 @@ export const nativeMenuItems = [
       },
       {
         title: "Defender",
-        path: "/security/defender",
         permissions: ["Security.Alert.*"],
         items: [
           {
@@ -326,7 +338,6 @@ export const nativeMenuItems = [
       },
       {
         title: "Reports",
-        path: "/security/reports",
         permissions: ["Tenant.DeviceCompliance.*"],
         items: [
           {
@@ -338,7 +349,6 @@ export const nativeMenuItems = [
       },
       {
         title: "Safe Links",
-        path: "/security/safelinks",
         permissions: ["Security.SafeLinksPolicy.*"],
         items: [
           {
@@ -373,7 +383,6 @@ export const nativeMenuItems = [
     items: [
       {
         title: "Applications",
-        path: "/endpoint/applications",
         permissions: ["Endpoint.Application.*"],
         items: [
           {
@@ -390,7 +399,6 @@ export const nativeMenuItems = [
       },
       {
         title: "Autopilot",
-        path: "/endpoint/autopilot",
         permissions: ["Endpoint.Autopilot.*"],
         items: [
           {
@@ -417,7 +425,6 @@ export const nativeMenuItems = [
       },
       {
         title: "Device Management",
-        path: "/endpoint/MEM",
         permissions: ["Endpoint.MEM.*"],
         items: [
           {
@@ -436,13 +443,23 @@ export const nativeMenuItems = [
             permissions: ["Endpoint.MEM.*"],
           },
           {
-            title: "Protection Policies",
+            title: "App Policies",
             path: "/endpoint/MEM/list-appprotection-policies",
             permissions: ["Endpoint.MEM.*"],
           },
           {
             title: "Policy Templates",
             path: "/endpoint/MEM/list-templates",
+            permissions: ["Endpoint.MEM.*"],
+          },
+          {
+            title: "Reusable Settings",
+            path: "/endpoint/MEM/reusable-settings",
+            permissions: ["Endpoint.MEM.*"],
+          },
+          {
+            title: "Reusable Settings Templates",
+            path: "/endpoint/MEM/reusable-settings-templates",
             permissions: ["Endpoint.MEM.*"],
           },
           {
@@ -464,8 +481,7 @@ export const nativeMenuItems = [
       },
       {
         title: "Reports",
-        path: "/endpoint/reports",
-        permissions: ["Endpoint.Device.*", "Endpoint.Autopilot.*"],
+        permissions: ["Endpoint.Device.*", "Endpoint.Autopilot.*", "Endpoint.MEM.*"],
         items: [
           {
             title: "Analytics Device Score",
@@ -481,6 +497,11 @@ export const nativeMenuItems = [
             title: "Autopilot Deployments",
             path: "/endpoint/reports/autopilot-deployment",
             permissions: ["Endpoint.Autopilot.*"],
+          },
+          {
+            title: "Discovered Apps",
+            path: "/endpoint/reports/detected-apps",
+            permissions: ["Endpoint.MEM.*"],
           },
         ],
       },
@@ -514,7 +535,6 @@ export const nativeMenuItems = [
       },
       {
         title: "Teams",
-        path: "/teams-share/teams",
         permissions: ["Teams.Group.*"],
         items: [
           {
@@ -560,7 +580,6 @@ export const nativeMenuItems = [
     items: [
       {
         title: "Administration",
-        path: "/email/administration",
         permissions: ["Exchange.Mailbox.*"],
         items: [
           {
@@ -612,7 +631,6 @@ export const nativeMenuItems = [
       },
       {
         title: "Transport",
-        path: "/email/transport",
         permissions: ["Exchange.TransportRule.*"],
         items: [
           {
@@ -639,7 +657,6 @@ export const nativeMenuItems = [
       },
       {
         title: "Spamfilter",
-        path: "/email/spamfilter",
         permissions: ["Exchange.SpamFilter.*"],
         items: [
           {
@@ -671,7 +688,6 @@ export const nativeMenuItems = [
       },
       {
         title: "Resource Management",
-        path: "/email/resources/management",
         permissions: ["Exchange.Equipment.*"],
         items: [
           {
@@ -693,7 +709,6 @@ export const nativeMenuItems = [
       },
       {
         title: "Reports",
-        path: "/email/reports",
         permissions: [
           "Exchange.Mailbox.*",
           "Exchange.SpamFilter.*",
@@ -714,6 +729,21 @@ export const nativeMenuItems = [
           {
             title: "Mailbox Client Access Settings",
             path: "/email/reports/mailbox-cas-settings",
+            permissions: ["Exchange.Mailbox.*"],
+          },
+          {
+            title: "Mailbox Permissions",
+            path: "/email/reports/mailbox-permissions",
+            permissions: ["Exchange.Mailbox.*"],
+          },
+          {
+            title: "Calendar Permissions",
+            path: "/email/reports/calendar-permissions",
+            permissions: ["Exchange.Mailbox.*"],
+          },
+          {
+            title: "Mailbox Forwarding",
+            path: "/email/reports/mailbox-forwarding",
             permissions: ["Exchange.Mailbox.*"],
           },
           {
@@ -759,11 +789,11 @@ export const nativeMenuItems = [
       "Tenant.Application.*",
       "Tenant.DomainAnalyser.*",
       "Exchange.Mailbox.*",
+      "CIPP.Scheduler.*",
     ],
     items: [
       {
         title: "Tenant Tools",
-        path: "/tenant/tools",
         permissions: ["Tenant.Administration.*"],
         items: [
           {
@@ -781,7 +811,6 @@ export const nativeMenuItems = [
             path: "/tenant/tools/tenantlookup",
             permissions: ["Tenant.Administration.*"],
           },
-
           {
             title: "IP Database",
             path: "/tenant/tools/geoiplookup",
@@ -797,7 +826,6 @@ export const nativeMenuItems = [
       },
       {
         title: "Email Tools",
-        path: "/email/tools",
         permissions: ["Exchange.Mailbox.*"],
         items: [
           {
@@ -819,7 +847,6 @@ export const nativeMenuItems = [
       },
       {
         title: "Dark Web Tools",
-        path: "/tools/darkweb",
         permissions: ["CIPP.Core.*"],
         items: [
           {
@@ -882,7 +909,7 @@ export const nativeMenuItems = [
         title: "Setup Wizard",
         path: "/onboardingv2",
         roles: ["admin", "superadmin"],
-        permissions: ["CIPP.Core.*"],
+        permissions: ["CIPP.AppSettings.*"],
       },
       {
         title: "Integrations",
@@ -894,7 +921,7 @@ export const nativeMenuItems = [
         title: "Custom Data",
         path: "/cipp/custom-data/directory-extensions",
         roles: ["admin", "superadmin"],
-        permissions: ["CIPP.Core.*"],
+        permissions: ["CIPP.AppSettings.*"],
       },
       {
         title: "Advanced",
@@ -922,6 +949,12 @@ export const nativeMenuItems = [
           {
             title: "Table Maintenance",
             path: "/cipp/advanced/table-maintenance",
+            roles: ["superadmin"],
+            permissions: ["CIPP.SuperAdmin.*"],
+          },
+          {
+            title: "Diagnostics",
+            path: "/cipp/advanced/diagnostics",
             roles: ["superadmin"],
             permissions: ["CIPP.SuperAdmin.*"],
           },
