@@ -12,12 +12,19 @@ const SIDE_NAV_WIDTH = 270;
 const SIDE_NAV_COLLAPSED_WIDTH = 73; // icon size + padding + border right
 const TOP_NAV_HEIGHT = 64;
 
+const isPathPrefix = (pathname, itemPath) => {
+  if (!pathname || !itemPath) return false;
+  if (pathname === itemPath) return true;
+  // Root "/" maps to /dashboardv2 under the hood
+  if (itemPath === "/") return pathname.startsWith("/dashboardv2");
+  return pathname.startsWith(itemPath + "/") || pathname.startsWith(itemPath + "?");
+};
+
 const markOpenItems = (items, pathname) => {
   return items.map((item) => {
     const checkPath = !!(item.path && pathname);
     const exactMatch = checkPath ? pathname === item.path : false;
-    // Special handling for root path "/" to avoid matching all paths
-    const partialMatch = checkPath && item.path !== "/" ? pathname.startsWith(item.path) : false;
+    const partialMatch = checkPath ? isPathPrefix(pathname, item.path) : false;
 
     let openImmediately = exactMatch;
     let newItems = item.items || [];
@@ -38,17 +45,20 @@ const markOpenItems = (items, pathname) => {
   });
 };
 
-const renderItems = ({ collapse = false, depth = 0, items, pathname }) =>
-  items.reduce((acc, item) => reduceChildRoutes({ acc, collapse, depth, item, pathname }), []);
+const renderItems = ({ collapse = false, depth = 0, items, pathname, category = "" }) =>
+  items.reduce(
+    (acc, item) => reduceChildRoutes({ acc, collapse, depth, item, pathname, category }),
+    []
+  );
 
-const reduceChildRoutes = ({ acc, collapse, depth, item, pathname }) => {
+const reduceChildRoutes = ({ acc, collapse, depth, item, pathname, category }) => {
   const checkPath = !!(item.path && pathname);
   const exactMatch = checkPath && pathname === item.path;
-  // Special handling for root path "/" to avoid matching all paths
-  const partialMatch = checkPath && item.path !== "/" ? pathname.startsWith(item.path) : false;
+  const partialMatch = checkPath ? isPathPrefix(pathname, item.path) : false;
 
   const hasChildren = item.items && item.items.length > 0;
   const isActive = exactMatch || (partialMatch && !hasChildren);
+  const currentCategory = depth === 0 && item.type === "header" ? item.title : category;
 
   if (hasChildren) {
     acc.push(
@@ -61,8 +71,10 @@ const reduceChildRoutes = ({ acc, collapse, depth, item, pathname }) => {
         key={item.title}
         openImmediately={item.openImmediately}
         path={item.path}
+        scope={item.scope}
         title={item.title}
         type={item.type}
+        category={currentCategory}
       >
         <Stack
           component="ul"
@@ -78,6 +90,7 @@ const reduceChildRoutes = ({ acc, collapse, depth, item, pathname }) => {
             depth: depth + 1,
             items: item.items,
             pathname,
+            category: currentCategory,
           })}
         </Stack>
       </SideNavItem>
@@ -92,7 +105,9 @@ const reduceChildRoutes = ({ acc, collapse, depth, item, pathname }) => {
         icon={item.icon}
         key={item.title}
         path={item.path}
+        scope={item.scope}
         title={item.title}
+        category={currentCategory}
       />
     );
   }
@@ -171,43 +186,49 @@ export const SideNav = (props) => {
             },
           }}
         >
+          <Box
+            component="nav"
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+              p: 2,
+            }}
+          >
             <Box
-              component="nav"
+              component="ul"
               sx={{
-                display: "flex",
-                flexDirection: "column",
-                height: "100%",
-                p: 2,
+                flexGrow: 1,
+                listStyle: "none",
+                m: 0,
+                p: 0,
               }}
             >
-              <Box
-                component="ul"
-                sx={{
-                  flexGrow: 1,
-                  listStyle: "none",
-                  m: 0,
-                  p: 0,
-                }}
-              >
-                {/* Bookmarks section above Dashboard */}
-                {showSidebarBookmarks && (
-                  <>
-                    <SideNavBookmarks collapse={collapse} />
-                    <Divider sx={{ my: 1 }} />
-                  </>
-                )}
-                {/* Render all menu items */}
-                {renderItems({
-                  collapse,
-                  depth: 0,
-                  items: processedItems,
-                  pathname,
-                })}
-              </Box>{" "}
-              {/* Add this closing tag */}
-              {profile?.clientPrincipal && <CippSponsor />}
+              {/* Bookmarks section above Dashboard */}
+              {showSidebarBookmarks && (
+                <>
+                  <SideNavBookmarks collapse={collapse} />
+                  <Divider sx={{ my: 1 }} />
+                </>
+              )}
+              {/* Render all menu items */}
+              {renderItems({
+                collapse,
+                depth: 0,
+                items: processedItems,
+                pathname,
+              })}
             </Box>{" "}
-            {/* Closing tag for the parent Box */}
+            {/* Add this closing tag */}
+            {profile?.clientPrincipal && (
+              <Box
+                sx={{ position: "sticky", bottom: 0, backgroundColor: "background.default", pt: 1 }}
+              >
+                <CippSponsor />
+              </Box>
+            )}
+          </Box>{" "}
+          {/* Closing tag for the parent Box */}
         </Drawer>
       )}
     </>
