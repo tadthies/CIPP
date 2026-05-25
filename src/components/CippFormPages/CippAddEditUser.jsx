@@ -846,11 +846,22 @@ const CippAddEditUser = (props) => {
               label: userGroups.DisplayName,
               value: userGroups.id,
               addedFields: {
-                groupType: userGroups.groupType,
+                groupType: userGroups.calculatedGroupType || userGroups.groupType,
               },
             }))}
             creatable={false}
             formControl={formControl}
+            customAction={{
+              icon: <Sync />,
+              tooltip: 'Refresh groups',
+              onClick: () => {
+                tenantGroups.refetch()
+                if (formType === 'edit') {
+                  userGroups.refetch()
+                }
+              },
+              position: 'outside',
+            }}
           />
         </Grid>
       )}

@@ -29,12 +29,14 @@ import { ApiGetCall, ApiPostCall } from '../../../../api/ApiCall'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import { CippFormCondition } from '../../../../components/CippComponents/CippFormCondition'
 import { CippHead } from '../../../../components/CippComponents/CippHead'
+import { useSettings } from '../../../../hooks/use-settings'
 
 const AlertWizard = () => {
   const apiRequest = ApiPostCall({
     relatedQueryKeys: ['ListAlertsQueue', 'ListCurrentAlerts'],
   })
   const router = useRouter()
+  const tenantFilter = useSettings().currentTenant
   const [editAlert, setAlertEdit] = useState(false)
   useEffect(() => {
     if (router.query.id) {
@@ -46,6 +48,8 @@ const AlertWizard = () => {
     url: '/api/ListAlertsQueue',
     relatedQueryKeys: 'ListAlertsQueue',
     queryKey: 'ListCurrentAlerts',
+    data: { tenantFilter },
+    waiting: !!tenantFilter,
   })
   const [recurrenceOptions, setRecurrenceOptions] = useState([
     { value: '30m', label: 'Every 30 minutes' },
@@ -166,12 +170,14 @@ const AlertWizard = () => {
         } else if (alert.RawAlert.TenantGroup) {
           try {
             const tenantGroupObject = JSON.parse(alert.RawAlert.TenantGroup)
-            tenantFilterForForm = {
-              value: tenantGroupObject.value,
-              label: tenantGroupObject.label,
-              type: 'Group',
-              addedFields: tenantGroupObject,
-            }
+            tenantFilterForForm = [
+              {
+                value: tenantGroupObject.value,
+                label: tenantGroupObject.label,
+                type: 'Group',
+                addedFields: tenantGroupObject,
+              },
+            ]
           } catch (error) {
             console.error('Error parsing tenant group:', error)
             tenantFilterForForm = [
