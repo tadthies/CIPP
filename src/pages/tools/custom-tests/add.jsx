@@ -118,7 +118,7 @@ const Page = () => {
       ScriptContent: '',
       Enabled: false,
       AlertOnFailure: false,
-      AlertStatuses: [{ value: 'Failed', label: 'Failed' }],
+      AlertStatuses: { value: 'Failed', label: 'Failed' },
       ReturnType: 'JSON',
       ResultMode: { value: 'Auto', label: 'Auto' },
       MarkdownTemplate: '',
@@ -148,12 +148,7 @@ const Page = () => {
         ScriptContent: script.ScriptContent || '',
         Enabled: script.Enabled || false,
         AlertOnFailure: script.AlertOnFailure || false,
-        AlertStatuses: script.AlertStatuses
-          ? (typeof script.AlertStatuses === 'string'
-              ? JSON.parse(script.AlertStatuses)
-              : script.AlertStatuses
-            ).map((s) => ({ value: s, label: s }))
-          : [{ value: 'Failed', label: 'Failed' }],
+        AlertStatuses: toSelectOption(script.AlertStatuses, 'Failed'),
         ReturnType: script.ReturnType || 'JSON',
         ResultMode: toSelectOption(script.ResultMode, 'Auto'),
         MarkdownTemplate: script.MarkdownTemplate || '',
@@ -196,6 +191,14 @@ const Page = () => {
   const handleExploreCache = (cacheType) => {
     setExpandedCacheType(expandedCacheType === cacheType ? null : cacheType)
   }
+
+  // Results may be an array of items or a single object (e.g. AuthenticationMethodsPolicy).
+  // Normalize to a single representative sample for the structure preview.
+  const cacheSampleResults = cacheExplorerApi.data?.Results
+  const cacheSample = Array.isArray(cacheSampleResults)
+    ? cacheSampleResults[0]
+    : cacheSampleResults
+  const hasCacheSample = cacheSample !== undefined && cacheSample !== null
 
   const testScriptApi = ApiPostCall({
     urlFromData: true,
@@ -261,9 +264,7 @@ const Page = () => {
       ScriptContent: data.ScriptContent,
       Enabled: data.Enabled,
       AlertOnFailure: data.AlertOnFailure,
-      AlertStatuses: data.AlertOnFailure
-        ? (data.AlertStatuses?.map(s => s.value) || ['Failed'])
-        : [],
+      AlertStatuses: data.AlertStatuses?.value ?? data.AlertStatuses,
       ReturnType: data.ReturnType,
       ResultMode: data.ResultMode?.value ?? data.ResultMode,
       MarkdownTemplate: data.MarkdownTemplate,
@@ -323,6 +324,14 @@ const Page = () => {
     { value: 'AlwaysPass', label: 'Always Pass' },
     { value: 'AlwaysInfo', label: 'Always Info' },
     { value: 'AlwaysInvestigate', label: 'Always Investigate' },
+  ]
+
+  const AlertStatuses = [
+    { value: 'Failed', label: 'Failed' },
+    { value: 'Passed', label: 'Passed' },
+    { value: 'Info', label: 'Info' },
+    { value: 'Investigate', label: 'Investigate' },
+    { value: 'All', label: 'All' },
   ]
 
   const scriptNameField = {
@@ -415,14 +424,8 @@ const Page = () => {
   const alertStatusesField = {
     name: 'AlertStatuses',
     label: 'Alert on Status',
-    type: 'autoComplete',
-    multiple: true,
-    options: [
-      { label: 'Failed', value: 'Failed' },
-      { label: 'Passed', value: 'Passed' },
-      { label: 'Info', value: 'Info' },
-      { label: 'Investigate', value: 'Investigate' },
-    ],
+    type: 'select',
+    options: AlertStatuses,
     helperText: 'Choose which test result statuses trigger an alert.',
   }
 
@@ -1175,9 +1178,9 @@ $md = $summaryTable + "\n\n---\n\n" + $policyTable
                         <CircularProgress size={16} />
                         <Typography variant="caption">Loading sample data...</Typography>
                       </Stack>
-                    ) : cacheExplorerApi.data?.Results?.length > 0 ? (
+                    ) : hasCacheSample ? (
                       <CippCodeBlock
-                        code={JSON.stringify(cacheExplorerApi.data.Results[0], null, 2)}
+                        code={JSON.stringify(cacheSample, null, 2)}
                         language="json"
                         showLineNumbers={false}
                       />
@@ -1297,6 +1300,7 @@ $md = $summaryTable + "\n\n---\n\n" + $policyTable
               formControl={formControl}
               compareType="is"
               compareValue={true}
+              clearOnHide={false}
             >
               <Grid size={{ xs: 12, md: 6 }}>
                 <CippFormComponent
