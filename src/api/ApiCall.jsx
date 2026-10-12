@@ -4,11 +4,31 @@ import { useDispatch } from "react-redux";
 import { showToast } from "../store/toasts";
 import { getCippError } from "../utils/get-cipp-error";
 import { buildVersionedHeaders } from "../utils/cippVersion";
+import { impersonationCacheParams } from "../utils/impersonation";
 
 const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const wildcardToRegExp = (pattern) =>
   new RegExp(`^${pattern.split("*").map(escapeRegExp).join(".*")}$`);
 const matchesWildcardPattern = (queryKey, pattern) => wildcardToRegExp(pattern).test(queryKey);
+
+// The server's Retry-After (seconds) as ms, capped so a large hint can't hang a request indefinitely.
+const getRetryAfterMs = (error) => {
+  if (!isAxiosError(error)) return null;
+  const headers = error.response?.headers;
+  const raw = headers?.get?.("retry-after") ?? headers?.["retry-after"];
+  const seconds = Number(raw);
+  return Number.isFinite(seconds) && seconds > 0 ? Math.min(seconds * 1000, 60000) : null;
+};
+
+// react-query's default exponential backoff, but honouring the server's Retry-After when present so a
+// throttled retry lands after the limit clears instead of hammering inside the window.
+const retryDelayWithRetryAfter = (failureCount, error) =>
+  getRetryAfterMs(error) ?? Math.min(1000 * 2 ** failureCount, 30000);
+
+// A request the user cancelled (navigated away / hit Cancel) aborts the axios signal and surfaces as
+// a CanceledError. That is expected, not a failure: never retry it and never raise an error toast.
+const isCanceledError = (error) =>
+  error?.code === "ERR_CANCELED" || error?.name === "CanceledError";
 
 export function ApiGetCall(props) {
   const {
@@ -35,6 +55,7 @@ export function ApiGetCall(props) {
   const MAX_RETRIES = retry;
   const HTTP_STATUS_TO_NOT_RETRY = [302, 401, 403, 404, 500];
   const retryFn = (failureCount, error) => {
+    if (isCanceledError(error)) return false;
     let returnRetry = true;
     if (failureCount >= MAX_RETRIES) {
       returnRetry = false;
@@ -71,8 +92,9 @@ export function ApiGetCall(props) {
           const element = data[i];
           const response = await axios.get(url, {
             signal: signal,
-            params: element,
+            params: { ...element, ...impersonationCacheParams() },
             headers: await buildVersionedHeaders(),
+            cippQueryKey: queryKey,
           });
           results.push(response.data);
           if (onResult) {
@@ -109,9 +131,10 @@ export function ApiGetCall(props) {
       } else {
         const response = await axios.get(url, {
           signal: url === "/api/tenantFilter" ? null : signal,
-          params: data,
+          params: { ...data, ...impersonationCacheParams() },
           headers: await buildVersionedHeaders(),
           responseType: responseType,
+          cippQueryKey: queryKey,
         });
 
         let responseData = response.data;
@@ -164,6 +187,7 @@ export function ApiGetCall(props) {
     keepPreviousData: keepPreviousData,
     refetchInterval: refetchInterval,
     retry: retryFn,
+    retryDelay: retryDelayWithRetryAfter,
   });
   return queryInfo;
 }
@@ -173,7 +197,31 @@ export function ApiPostCall({ relatedQueryKeys, onResult }) {
 
   const mutation = useMutation({
     mutationFn: async (props) => {
-      const { url, data, bulkRequest } = props;
+      const { url, data, bulkRequest, followUps } = props;
+      if (followUps?.length) {
+        // A failed primary request throws as usual and nothing else is sent. Once it has
+        // succeeded, a failed follow-up is reported next to it rather than raised, so the
+        // primary's results are never hidden behind a follow-up error.
+        const primary = await axios.post(url, data, { headers: await buildVersionedHeaders() });
+        if (onResult) {
+          onResult(primary.data);
+        }
+        const results = [primary.data];
+        for (const followUp of followUps) {
+          try {
+            const response = await axios.post(followUp.url, followUp.data, {
+              headers: await buildVersionedHeaders(),
+            });
+            results.push(response.data);
+          } catch (error) {
+            results.push({
+              Results:
+                error.response?.data?.Results ?? `Failed ${followUp.url}: ${error.message}`,
+            });
+          }
+        }
+        return results;
+      }
       if (bulkRequest && Array.isArray(data)) {
         const results = [];
         for (let i = 0; i < data.length; i++) {
@@ -260,6 +308,7 @@ export function ApiGetCallWithPagination({
   const HTTP_STATUS_TO_NOT_RETRY = [302, 401, 403, 404, 500];
 
   const retryFn = (failureCount, error) => {
+    if (isCanceledError(error)) return false;
     let returnRetry = true;
     if (failureCount >= MAX_RETRIES) {
       returnRetry = false;
@@ -292,16 +341,18 @@ export function ApiGetCallWithPagination({
     queryFn: async ({ pageParam = null, signal }) => {
       const response = await axios.get(url, {
         signal: signal,
-        params: { ...data, ...pageParam },
+        params: { ...data, ...pageParam, ...impersonationCacheParams() },
         headers: await buildVersionedHeaders(),
+        cippQueryKey: queryKey,
       });
       return response.data;
     },
     getNextPageParam: (lastPage) => {
+      // AllTenants pages only when the page opted into manualPagination.
       if (
         data?.noPagination ||
         data?.manualPagination === false ||
-        data?.tenantFilter === "AllTenants"
+        (data?.tenantFilter === "AllTenants" && data?.manualPagination !== true)
       ) {
         return undefined;
       }
@@ -310,6 +361,7 @@ export function ApiGetCallWithPagination({
     staleTime: 300000,
     refetchOnWindowFocus: false,
     retry: retryFn,
+    retryDelay: retryDelayWithRetryAfter,
   });
 
   return queryInfo;
